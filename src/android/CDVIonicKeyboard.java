@@ -15,6 +15,7 @@ import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 
 // import additionally required classes for calculating screen height
@@ -125,13 +126,7 @@ public class CDVIonicKeyboard extends CordovaPlugin {
                         private void possiblyResizeChildOfContent() {
                             int usableHeightNow = computeUsableHeight();
                             if (usableHeightNow != usableHeightPrevious) {
-                                int usableHeightSansKeyboard = mChildOfContent.getRootView().getHeight();
-                                int heightDifference = usableHeightSansKeyboard - usableHeightNow;
-                                if (heightDifference > (usableHeightSansKeyboard/4)) {
-                                    frameLayoutParams.height = usableHeightSansKeyboard - heightDifference;
-                                } else {
-                                    frameLayoutParams.height = usableHeightSansKeyboard;
-                                }
+                                frameLayoutParams.height = usableHeightNow;
                                 mChildOfContent.requestLayout();
                                 usableHeightPrevious = usableHeightNow;
                             }
@@ -140,7 +135,14 @@ public class CDVIonicKeyboard extends CordovaPlugin {
                         private int computeUsableHeight() {
                             Rect r = new Rect();
                             mChildOfContent.getWindowVisibleDisplayFrame(r);
-                            return (r.bottom - r.top);
+                            return isFullScreen() ? r.bottom - r.top : r.height();
+                        }
+
+                        private boolean isFullScreen() {
+                            final Window window = cordova.getActivity().getWindow();
+                            // Flag set by status bar plugin to make content full screen
+                            int fullScreenFlag = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
+                            return (window.getDecorView().getSystemUiVisibility() & fullScreenFlag) == fullScreenFlag;
                         }
                     };
 
